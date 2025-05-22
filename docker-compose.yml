@@ -1,0 +1,59 @@
+services:
+  app:
+    container_name: app-minio-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${SERVER_PORT}:${SERVER_PORT}"
+    environment:
+      - SERVER_PORT=${SERVER_PORT}
+      - MINIO_ENDPOINT=app-minio-drive
+      - MINIO_PORT=${MINIO_API_PORT}
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
+      - MINIO_USE_SSL=${MINIO_USE_SSL}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+    depends_on:
+      app-minio-drive:
+        condition: service_healthy
+    restart: on-failure
+    command: >
+      sh -c "sleep 5 && /app/server"
+    networks:
+      - app-network
+      - microservices-network
+
+  app-minio-drive:
+    image: minio/minio:latest
+    container_name: app-minio-drive
+    ports:
+      - "${MINIO_API_PORT}:9000" # API port
+      - "${MINIO_CONSOLE_PORT}:9001" # Console port
+    volumes:
+      - ${linux_volume_minio_path:-minio_data}:/data
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    command: server --console-address ":9001" /data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    networks:
+      - app-network
+      - microservices-network
+
+volumes:
+  minio_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
+  microservices-network:
+    driver: bridge
+    name: microservices-network

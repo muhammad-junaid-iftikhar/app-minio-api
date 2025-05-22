@@ -1,0 +1,110 @@
+basePath: /api/v1
+host: localhost:8080
+info:
+  contact:
+    email: support@yourdomain.com
+    name: API Support
+    url: http://www.yourdomain.com/support
+  description: A RESTful API for Minio Go application
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Minio Go API
+  version: "1.0"
+paths:
+  /buckets:
+    get:
+      description: List all buckets in MinIO
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: object
+            type: array
+      summary: List all buckets
+      tags:
+      - buckets
+  /files:
+    get:
+      description: List all files in the MinIO bucket
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: object
+            type: array
+      summary: List all files
+      tags:
+      - files
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload a file to MinIO storage
+      parameters:
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Upload a file to MinIO
+      tags:
+      - files
+  /files/{filename}:
+    delete:
+      description: Delete a file from MinIO by its name
+      parameters:
+      - description: File name
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Delete a file
+      tags:
+      - files
+    get:
+      description: Get a file from MinIO by its name
+      parameters:
+      - description: File name
+        in: path
+        name: filename
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+      summary: Get a file
+      tags:
+      - files
+securityDefinitions:
+  BasicAuth:
+    type: basic
+swagger: "2.0"

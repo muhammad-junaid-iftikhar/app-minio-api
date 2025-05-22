@@ -1,0 +1,30 @@
+#Binaries
+*.exe *.exe~ *.dll *.so *.dylib
+
+#Output of the go coverage tool
+*.out
+
+#Dependency directories
+vendor/
+
+#Environment
+.env 
+.env.local 
+.env.development.local 
+.env.test.local 
+.env.production.local
+
+#IDEs and editors
+.idea/ *.sublime-project *.sublime-workspace .vscode/
+
+#Logs
+*.log logs/
+
+#Build output
+bin/ dist/
+
+#Docker
+docker-compose.override.yml 
+*.dockerignore
+
+
