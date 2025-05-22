@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/m.iftikhar/app-minio-go/config"
-	"github.com/m.iftikhar/app-minio-go/internal/utils"
+	"github.com/muhammad-junaid-iftikhar/app-minio-api/config"
+	"github.com/muhammad-junaid-iftikhar/app-minio-api/internal/utils"
 	"github.com/minio/minio-go/v7"
 	"github.com/rs/zerolog"
 )

@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/m.iftikhar/app-minio-go/config"
-	"github.com/m.iftikhar/app-minio-go/internal/api/handlers"
+	"github.com/muhammad-junaid-iftikhar/app-minio-api/config"
+	"github.com/muhammad-junaid-iftikhar/app-minio-api/internal/api/handlers"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 	"github.com/rs/zerolog"
