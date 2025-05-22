@@ -47,6 +47,18 @@ services:
       - app-network
       - microservices-network
 
+  vector:
+    image: timberio/vector:latest-alpine
+    container_name: vector
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./vector.toml:/etc/vector/vector.toml:ro
+    environment:
+      - VECTOR_LOG=info
+    networks:
+      - microservices-network
+
 volumes:
   minio_data:
     driver: local

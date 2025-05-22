@@ -8,7 +8,7 @@ dev-build:
 	docker compose -f docker-compose.yml -f docker-compose.dev.yml build --no-cache app-dev
 
 dev-up:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml up app-dev
+	docker compose -f docker-compose.dev.yml up app-dev app-minio-drive vector
 
 dev: dev-down dev-build dev-up
 

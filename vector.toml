@@ -1,0 +1,47 @@
+[sources.docker_logs]
+type = "docker_logs"
+include_containers = ["app-minio-api-dev"]
+# Optional: exclude certain log levels if needed
+# exclude_labels = { "com.docker.compose.service" = "vector" }
+
+[transforms.only_api_json_logs]
+type = "remap"
+inputs = ["docker_logs"]
+source = '''
+parsed, err = parse_json(.message)
+if err == null {
+  . = parsed
+} else {
+  abort
+}
+'''
+
+[sinks.openobserve]
+type = "http"
+inputs = ["only_api_json_logs"]
+uri = "http://openobserve:5080/api/default/default/_json"
+method = "post"
+encoding.codec = "json"
+encoding.timestamp_format = "rfc3339"
+
+auth.strategy = "basic"
+auth.user = "admin@example.com"
+auth.password = "1PUfKcKyPehtWXKY"
+
+healthcheck.enabled = true
+healthcheck.uri = "http://openobserve:5080/health"
+
+# Optional: Console sink for debugging (remove in production)
+[sinks.console_debug]
+type = "console"
+inputs = ["only_api_json_logs"]
+encoding.codec = "json"
+# Comment out or remove this sink once everything is working
+
+# Optional: File sink as backup
+[sinks.file_backup]
+type = "file"
+inputs = ["only_api_json_logs"]
+path = "/tmp/vector-logs-%Y-%m-%d.log"
+encoding.codec = "json"
+# Uncomment if you want local file backup

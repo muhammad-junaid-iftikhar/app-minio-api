@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 services:
   app-dev:
     container_name: app-minio-api-dev
@@ -49,6 +49,19 @@ services:
     restart: unless-stopped
     networks:
       - app-network
+      - microservices-network
+
+  vector:
+    image: timberio/vector:latest-alpine
+    container_name: vector
+    command: ["-c", "/etc/vector/vector.toml"]
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./vector.toml:/etc/vector/vector.toml:ro
+    environment:
+      - VECTOR_LOG=info
+    networks:
       - microservices-network
 
 volumes:
