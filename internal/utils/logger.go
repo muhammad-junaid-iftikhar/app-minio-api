@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"os"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -33,13 +34,21 @@ func LoggerMiddleware(logger *zerolog.Logger) gin.HandlerFunc {
 			severity = "WARNING"
 		}
 
-		// GCP httpRequest object
+		// httpRequest object (nested)
 		httpRequest := map[string]interface{}{
 			"requestMethod": c.Request.Method,
 			"requestUrl": path,
 			"status": c.Writer.Status(),
 			"latency": latency.String(),
-			"remoteIp": c.ClientIP(),
+		}
+
+		// Resource labels (dynamic from environment variables)
+		resource := map[string]interface{}{
+			"labels": map[string]interface{}{
+				"project_id": os.Getenv("PROJECT_ID"),
+				"app": os.Getenv("APP_NAME"),
+				"source": os.Getenv("APP_SOURCE"),
+			},
 		}
 
 		// Get correlation ID from context
@@ -50,6 +59,7 @@ func LoggerMiddleware(logger *zerolog.Logger) gin.HandlerFunc {
 			Str("severity", severity).
 			Str("correlation_id", correlationIDStr).
 			Time("timestamp", end).
+			Interface("resource", resource).
 			Interface("httpRequest", httpRequest).
 			Msg(msg)
 	}

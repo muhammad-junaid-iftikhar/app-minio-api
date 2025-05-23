@@ -8,6 +8,7 @@ import (
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/spf13/viper"
+	"github.com/rs/zerolog"
 )
 
 type Config struct {
@@ -46,7 +47,8 @@ func LoadConfig() (*Config, error) {
 			}
 		}
 		// Log that we're proceeding with environment variables
-		fmt.Println("No .env file found or could not be read, using environment variables")
+		logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+		logger.Warn().Msg("No .env file found or could not be read, using environment variables")
 	}
 
 	var cfg Config
@@ -55,8 +57,12 @@ func LoadConfig() (*Config, error) {
 	}
 
 	// Debug: Print the loaded configuration
-	fmt.Printf("Loaded configuration: SERVER_PORT=%s, MINIO_ENDPOINT=%s, MINIO_PORT=%s\n", 
-		cfg.ServerPort, cfg.MinioEndpoint, cfg.MinioPort)
+	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+	logger.Info().
+		Str("server_port", cfg.ServerPort).
+		Str("minio_endpoint", cfg.MinioEndpoint).
+		Str("minio_port", cfg.MinioPort).
+		Msg("Loaded configuration")
 
 	return &cfg, nil
 }
@@ -85,9 +91,11 @@ func InitMinioClient(cfg *Config) (*minio.Client, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to create bucket: %w", err)
 		}
-		fmt.Printf("Created bucket: %s\n", cfg.MinioBucketName)
+		logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+		logger.Info().Str("bucket", cfg.MinioBucketName).Msg("Created bucket")
 	} else {
-		fmt.Printf("Bucket already exists: %s\n", cfg.MinioBucketName)
+		logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
+		logger.Info().Str("bucket", cfg.MinioBucketName).Msg("Bucket already exists")
 	}
 
 	return client, nil

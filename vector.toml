@@ -26,7 +26,7 @@ encoding.timestamp_format = "rfc3339"
 
 auth.strategy = "basic"
 auth.user = "admin@example.com"
-auth.password = "1PUfKcKyPehtWXKY"
+auth.password = "admin"
 
 healthcheck.enabled = true
 healthcheck.uri = "http://openobserve:5080/health"

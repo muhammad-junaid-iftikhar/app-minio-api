@@ -41,10 +41,12 @@ func NewMinioHandler(minioClient *minio.Client, logger *zerolog.Logger, cfg *con
 // @Success 200 {object} map[string]string
 // @Router /files [post]
 func (h *MinioHandler) UploadFile(c *gin.Context) {
+	correlationID, _ := c.Get("CorrelationID")
+	correlationIDStr, _ := correlationID.(string)
 	// Get file from form
 	file, header, err := c.Request.FormFile("file")
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Failed to get file from form")
+		h.logger.Error().Err(err).Str("correlation_id", correlationIDStr).Msg("Failed to get file from form")
 		utils.SendError(c, http.StatusBadRequest, "Failed to get file")
 		return
 	}
@@ -82,12 +84,13 @@ func (h *MinioHandler) UploadFile(c *gin.Context) {
 		minio.PutObjectOptions{ContentType: contentType},
 	)
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Failed to upload file to MinIO")
+		h.logger.Error().Err(err).Str("correlation_id", correlationIDStr).Msg("Failed to upload file to MinIO")
 		utils.SendError(c, http.StatusInternalServerError, "Failed to upload file")
 		return
 	}
 
 	h.logger.Info().
+		Str("correlation_id", correlationIDStr).
 		Str("bucket", info.Bucket).
 		Str("object", info.Key).
 		Int64("size", info.Size).
@@ -109,6 +112,8 @@ func (h *MinioHandler) UploadFile(c *gin.Context) {
 // @Success 200 {array} object
 // @Router /files [get]
 func (h *MinioHandler) ListFiles(c *gin.Context) {
+	correlationID, _ := c.Get("CorrelationID")
+	correlationIDStr, _ := correlationID.(string)
 	ctx := context.Background()
 	objectCh := h.minioClient.ListObjects(ctx, h.config.MinioBucketName, minio.ListObjectsOptions{
 		Recursive: true,
@@ -117,7 +122,7 @@ func (h *MinioHandler) ListFiles(c *gin.Context) {
 	var objects []map[string]interface{}
 	for object := range objectCh {
 		if object.Err != nil {
-			h.logger.Error().Err(object.Err).Msg("Error listing objects")
+			h.logger.Error().Err(object.Err).Str("correlation_id", correlationIDStr).Msg("Error listing objects")
 			utils.SendError(c, http.StatusInternalServerError, "Failed to list files")
 			return
 		}
@@ -142,6 +147,8 @@ func (h *MinioHandler) ListFiles(c *gin.Context) {
 // @Success 200 {file} binary
 // @Router /files/{filename} [get]
 func (h *MinioHandler) GetFile(c *gin.Context) {
+	correlationID, _ := c.Get("CorrelationID")
+	correlationIDStr, _ := correlationID.(string)
 	filename := c.Param("filename")
 	if filename == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Filename is required"})
@@ -156,7 +163,7 @@ func (h *MinioHandler) GetFile(c *gin.Context) {
 		minio.GetObjectOptions{},
 	)
 	if err != nil {
-		h.logger.Error().Err(err).Str("filename", filename).Msg("Failed to get file from MinIO")
+		h.logger.Error().Err(err).Str("correlation_id", correlationIDStr).Str("filename", filename).Msg("Failed to get file from MinIO")
 		utils.SendError(c, http.StatusInternalServerError, "Failed to get file")
 		return
 	}
@@ -169,7 +176,7 @@ func (h *MinioHandler) GetFile(c *gin.Context) {
 			utils.SendError(c, http.StatusNotFound, "File not found")
 			return
 		}
-		h.logger.Error().Err(err).Str("filename", filename).Msg("Failed to get file stats")
+		h.logger.Error().Err(err).Str("correlation_id", correlationIDStr).Str("filename", filename).Msg("Failed to get file stats")
 		utils.SendError(c, http.StatusInternalServerError, "Failed to get file info")
 		return
 	}
@@ -181,7 +188,7 @@ func (h *MinioHandler) GetFile(c *gin.Context) {
 
 	// Stream the file to the response
 	if _, err := io.Copy(c.Writer, object); err != nil {
-		h.logger.Error().Err(err).Str("filename", filename).Msg("Failed to stream file")
+		h.logger.Error().Err(err).Str("correlation_id", correlationIDStr).Str("filename", filename).Msg("Failed to stream file")
 		// Cannot send JSON response here as we've already started writing the response
 		return
 	}
@@ -196,6 +203,8 @@ func (h *MinioHandler) GetFile(c *gin.Context) {
 // @Success 200 {object} map[string]string
 // @Router /files/{filename} [delete]
 func (h *MinioHandler) DeleteFile(c *gin.Context) {
+	correlationID, _ := c.Get("CorrelationID")
+	correlationIDStr, _ := correlationID.(string)
 	filename := c.Param("filename")
 	if filename == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Filename is required"})
@@ -210,12 +219,12 @@ func (h *MinioHandler) DeleteFile(c *gin.Context) {
 		minio.RemoveObjectOptions{},
 	)
 	if err != nil {
-		h.logger.Error().Err(err).Str("filename", filename).Msg("Failed to delete file from MinIO")
+		h.logger.Error().Err(err).Str("correlation_id", correlationIDStr).Str("filename", filename).Msg("Failed to delete file from MinIO")
 		utils.SendError(c, http.StatusInternalServerError, "Failed to delete file")
 		return
 	}
 
-	h.logger.Info().Str("filename", filename).Msg("File deleted successfully")
+	h.logger.Info().Str("correlation_id", correlationIDStr).Str("filename", filename).Msg("File deleted successfully")
 	utils.SendJSONWithCorrelationID(c, http.StatusOK, map[string]interface{}{
 		"message": "File deleted successfully",
 		"filename": filename,
@@ -230,9 +239,11 @@ func (h *MinioHandler) DeleteFile(c *gin.Context) {
 // @Success 200 {array} object
 // @Router /buckets [get]
 func (h *MinioHandler) ListBuckets(c *gin.Context) {
+	correlationID, _ := c.Get("CorrelationID")
+	correlationIDStr, _ := correlationID.(string)
 	buckets, err := h.minioClient.ListBuckets(context.Background())
 	if err != nil {
-		h.logger.Error().Err(err).Msg("Failed to list buckets")
+		h.logger.Error().Err(err).Str("correlation_id", correlationIDStr).Msg("Failed to list buckets")
 		utils.SendError(c, http.StatusInternalServerError, "Failed to list buckets")
 		return
 	}
