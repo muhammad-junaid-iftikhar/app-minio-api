@@ -50,12 +50,13 @@ services:
   vector:
     image: timberio/vector:latest-alpine
     container_name: vector
+    command: ["-c", "/etc/vector/vector.toml"]
+    environment:
+      - VECTOR_LOG=error  # Only show errors in production
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./vector.toml:/etc/vector/vector.toml:ro
-    environment:
-      - VECTOR_LOG=info
     networks:
       - microservices-network
 

@@ -36,6 +36,11 @@ import (
 
 // @securityDefinitions.basic  BasicAuth
 func main() {
+	// Set Gin mode based on APP_ENV (must be done before any Gin initialization)
+	if os.Getenv("APP_ENV") != "dev" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	// Initialize logger
 	logger := zerolog.New(os.Stdout).With().Timestamp().Logger()
 

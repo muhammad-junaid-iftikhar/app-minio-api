@@ -1,45 +1,69 @@
-.PHONY: all build run test clean docker-build docker-up docker-down swagger-gen dev dev-down dev-build dev-up
+.PHONY: all build run test clean swagger-gen \
+        dev dev-up dev-down dev-build \
+        prod prod-up prod-down prod-build
 
-# --- DEV WORKFLOW ---
-dev-down:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
-
-dev-build:
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml build --no-cache app-dev
-
-dev-up:
-	docker compose -f docker-compose.dev.yml up app-dev app-minio-drive vector
-
+# --- DEVELOPMENT COMMANDS ---
+# Start development environment (with hot reloading)
 dev: dev-down dev-build dev-up
 
-# --- PROD WORKFLOW ---
-prod-down:
-	docker compose -f docker-compose.yml down
+# Start development services
+dev-up:
+	@echo "Starting development environment..."
+	docker compose -f docker-compose.dev.yml up app app-minio-drive-dev vector-dev
 
-prod-build:
-	docker compose -f docker-compose.yml build --no-cache app
+# Stop development services
+dev-down:
+	@echo "Stopping development environment..."
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
 
-prod-up:
-	docker compose -f docker-compose.yml up app
+# Rebuild development container
+dev-build:
+	@echo "Building development container..."
+	docker compose -f docker-compose.yml -f docker-compose.dev.yml build --no-cache app
 
+# --- PRODUCTION COMMANDS ---
+# Deploy production environment (with build)
 prod: prod-down prod-build prod-up
 
-all: build
+# Start production services
+prod-up:
+	@echo "Starting production environment..."
+	docker compose -f docker-compose.yml up -d
 
-build: go build -o bin/server cmd/server/main.go
+# Start production services with logs
+prod-up-logs:
+	@echo "Starting production environment..."
+	docker compose -f docker-compose.yml up
 
-run: go run cmd/server/main.go
+# Stop production services
+prod-down:
+	@echo "Stopping production environment..."
+	docker compose -f docker-compose.yml down
 
-test: go test ./...
+# Rebuild production container
+prod-build:
+	@echo "Building production container..."
+	docker compose -f docker-compose.yml build --no-cache app
 
-clean: rm -rf bin/
+# --- BUILD & TEST COMMANDS ---
+# Build the application
+build:
+	go build -o bin/server cmd/server/main.go
 
-docker-build: docker-compose build
+# Run the application locally (without Docker)
+run:
+	go run cmd/server/main.go
 
-docker-up: docker-compose up -d
+# Run tests
+test:
+	go test -v ./...
 
-docker-down: docker-compose down
+# Clean build artifacts
+clean:
+	rm -rf bin/
 
+# --- DOCUMENTATION ---
+# Generate Swagger documentation
 swagger-gen:
 	@echo "Generating Swagger documentation..."
 	@if ! command -v swag &> /dev/null; then \
@@ -47,5 +71,8 @@ swagger-gen:
 		go install github.com/swaggo/swag/cmd/swag@latest; \
 	fi
 	@swag init -g cmd/server/main.go -o ./docs
-	@echo "Swagger documentation generated successfully!"
-	@echo "You can access the Swagger UI at http://localhost:8080/swagger/index.html when the server is running."
+	@echo "✅ Swagger documentation generated successfully!"
+	@echo "🌐 Access Swagger UI at http://localhost:8080/swagger/index.html when the server is running."
+
+# Default target
+all: build

@@ -1,6 +1,6 @@
 version: "3.8"
 services:
-  app-dev:
+  app:
     container_name: app-minio-api-dev
     build:
       context: .
@@ -10,7 +10,7 @@ services:
       - "${SERVER_PORT}:${SERVER_PORT}"
     environment:
       - SERVER_PORT=${SERVER_PORT}
-      - MINIO_ENDPOINT=app-minio-drive
+      - MINIO_ENDPOINT=app-minio-drive-dev
       - MINIO_PORT=${MINIO_API_PORT}
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
@@ -20,7 +20,7 @@ services:
       - APP_NAME=${APP_NAME}
       - APP_SOURCE=${APP_SOURCE}
     depends_on:
-      app-minio-drive:
+      app-minio-drive-dev:
         condition: service_healthy
     restart: on-failure
     volumes:
@@ -31,9 +31,9 @@ services:
       - app-network
       - microservices-network
 
-  app-minio-drive:
+  app-minio-drive-dev:
     image: minio/minio:latest
-    container_name: app-minio-drive
+    container_name: app-minio-drive-dev
     ports:
       - "${MINIO_API_PORT}:9000" # API port
       - "${MINIO_CONSOLE_PORT}:9001" # Console port
@@ -54,9 +54,9 @@ services:
       - app-network
       - microservices-network
 
-  vector:
+  vector-dev:
     image: timberio/vector:latest-alpine
-    container_name: vector
+    container_name: vector-dev
     command: ["-c", "/etc/vector/vector.toml"]
     volumes:
       - /var/lib/docker/containers:/var/lib/docker/containers:ro
