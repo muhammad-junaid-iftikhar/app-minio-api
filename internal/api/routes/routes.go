@@ -6,11 +6,40 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 	"github.com/rs/zerolog"
+	"net/http"
 )
 
+// addCorsHeaders adds CORS headers to the response
+func addCorsHeaders() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	}
+}
+
+// optionsHandler handles OPTIONS requests
+func optionsHandler(c *gin.Context) {
+	c.Status(http.StatusNoContent)
+}
+
 func SetupRoutes(router *gin.Engine, minioClient *minio.Client, logger *zerolog.Logger, cfg *config.Config) {
+	// Add CORS middleware to all routes
+	router.Use(addCorsHeaders())
+
 	// Initialize MinIO handler
 	minioHandler := handlers.NewMinioHandler(minioClient, logger, cfg)
+
+	// Handle OPTIONS method for all routes
+	router.OPTIONS("/*any", optionsHandler)
 
 	// API version group
 	v1 := router.Group("/api/v1")
@@ -18,6 +47,8 @@ func SetupRoutes(router *gin.Engine, minioClient *minio.Client, logger *zerolog.
 		// File operations
 		files := v1.Group("/files")
 		{
+			// Handle OPTIONS for /api/v1/files
+			files.OPTIONS("", optionsHandler)
 			// Upload file
 			// @Summary Upload a file to MinIO
 			// @Description Upload a file to MinIO storage
@@ -36,7 +67,9 @@ func SetupRoutes(router *gin.Engine, minioClient *minio.Client, logger *zerolog.
 			// @Produce json
 			// @Success 200 {array} object
 			// @Router /api/v1/files [get]
+			// @Router /api/v1/files [options]
 			files.GET("", minioHandler.ListFiles)
+			files.OPTIONS("", optionsHandler) // Explicit OPTIONS for the base path
 
 			// Get file
 			// @Summary Get a file
@@ -46,7 +79,9 @@ func SetupRoutes(router *gin.Engine, minioClient *minio.Client, logger *zerolog.
 			// @Param filename path string true "File name"
 			// @Success 200 {file} binary
 			// @Router /api/v1/files/{filename} [get]
+			// @Router /api/v1/files/{filename} [options]
 			files.GET("/:filename", minioHandler.GetFile)
+			files.OPTIONS("/:filename", optionsHandler)
 
 			// Delete file
 			// @Summary Delete a file
@@ -56,7 +91,9 @@ func SetupRoutes(router *gin.Engine, minioClient *minio.Client, logger *zerolog.
 			// @Param filename path string true "File name"
 			// @Success 200 {object} map[string]string
 			// @Router /api/v1/files/{filename} [delete]
+			// @Router /api/v1/files/{filename} [options]
 			files.DELETE("/:filename", minioHandler.DeleteFile)
+			files.OPTIONS("/:filename", optionsHandler)
 		}
 
 		// Bucket operations
