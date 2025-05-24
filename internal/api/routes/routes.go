@@ -1,12 +1,11 @@
 package routes
 
 import (
-	"github.com/muhammad-junaid-iftikhar/app-minio-api/config"
-	"github.com/muhammad-junaid-iftikhar/app-minio-api/internal/api/handlers"
 	"github.com/gin-gonic/gin"
 	"github.com/minio/minio-go/v7"
 	"github.com/rs/zerolog"
-	"net/http"
+	"github.com/muhammad-junaid-iftikhar/app-minio-api/config"
+	"github.com/muhammad-junaid-iftikhar/app-minio-api/internal/api/handlers"
 )
 
 // addCorsHeaders adds CORS headers to the response
