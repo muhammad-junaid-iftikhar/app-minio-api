@@ -64,14 +64,24 @@ func main() {
 	router.Use(utils.LoggerMiddleware(&logger))
 
 	// CORS middleware
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
-		AllowMethods:     []string{"GET", "POST", "DELETE", "PUT", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-		MaxAge: 12 * time.Hour,
-	}))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = []string{
+		"http://localhost:3000",
+		"http://192.168.0.190:8080",
+		"http://localhost:8080",
+	}
+	corsConfig.AllowMethods = []string{"GET", "POST", "DELETE", "PUT", "OPTIONS"}
+	corsConfig.AllowHeaders = []string{
+		"Origin",
+		"Content-Type",
+		"Accept",
+		"Authorization",
+		"X-Requested-With",
+	}
+	corsConfig.ExposeHeaders = []string{"Content-Length", "Content-Type"}
+	corsConfig.AllowCredentials = true
+	corsConfig.MaxAge = 12 * time.Hour
+	router.Use(cors.New(corsConfig))
 
 	// Initialize routes
 	routes.SetupRoutes(router, minioClient, &logger, cfg)
