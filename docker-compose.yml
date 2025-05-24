@@ -6,9 +6,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      target: prod
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     environment:
+      - APP_ENV=production
       - SERVER_PORT=${SERVER_PORT}
       - MINIO_ENDPOINT=app-minio-drive
       - MINIO_PORT=${MINIO_API_PORT}
@@ -16,12 +18,34 @@ services:
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
       - MINIO_USE_SSL=${MINIO_USE_SSL}
       - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME}
+      - PROJECT_ID=${PROJECT_ID}
+      - APP_NAME=${APP_NAME}
+      - APP_SOURCE=${APP_SOURCE}
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_FORMAT=${LOG_FORMAT}
     depends_on:
       app-minio-drive:
         condition: service_healthy
-    restart: on-failure
-    command: >
-      sh -c "sleep 5 && /app/server"
+    restart: unless-stopped
+    command: ["/app/wait-for-minio.sh"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--spider",
+          "-q",
+          "http://localhost:${SERVER_PORT}/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    volumes:
+      - type: bind
+        source: ./db/migrations
+        target: /app/db/migrations
+    working_dir: /app
     networks:
       - app-network
       - microservices-network
@@ -57,7 +81,6 @@ services:
       - VECTOR_LOG=error
     volumes:
       - ${vector_volume_path}:/var/lib/vector
-      - /var/lib/docker/containers:/var/lib/docker/containers:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./vector.toml:/etc/vector/vector.toml:ro
     networks:

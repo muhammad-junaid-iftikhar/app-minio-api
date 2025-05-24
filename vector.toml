@@ -1,8 +1,8 @@
 [sources.docker_logs]
 type = "docker_logs"
-include_containers = ["app-minio-api", "app-minio-api-dev"]
+include_containers = ["app-minio-api", "app-minio-drive"]
 # Exclude vector's own logs to prevent loops
-exclude_containers = ["vector"]
+exclude_containers = ["app-minio-vector"]
 
 [transforms.only_api_json_logs]
 type = "remap"
@@ -35,6 +35,5 @@ healthcheck.uri = "http://openobserve:5080/health"
 [sinks.file_backup]
 type = "file"
 inputs = ["only_api_json_logs"]
-path = "/tmp/vector-logs-%Y-%m-%d.log"
+path = "/var/lib/vector/vector-logs-%Y-%m-%d.log"
 encoding.codec = "json"
-# Uncomment if you want local file backup
