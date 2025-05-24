@@ -63,25 +63,21 @@ func main() {
 	router.Use(utils.CorrelationIDMiddleware())
 	router.Use(utils.LoggerMiddleware(&logger))
 
-	// CORS middleware
-	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{
-		"http://localhost:3000",
-		"http://192.168.0.190:8080",
-		"http://localhost:8080",
-	}
-	corsConfig.AllowMethods = []string{"GET", "POST", "DELETE", "PUT", "OPTIONS"}
-	corsConfig.AllowHeaders = []string{
-		"Origin",
-		"Content-Type",
-		"Accept",
-		"Authorization",
-		"X-Requested-With",
-	}
-	corsConfig.ExposeHeaders = []string{"Content-Length", "Content-Type"}
-	corsConfig.AllowCredentials = true
-	corsConfig.MaxAge = 12 * time.Hour
-	router.Use(cors.New(corsConfig))
+	// CORS middleware - permissive for development
+	router.Use(func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type")
+		c.Writer.Header().Set("Access-Control-Max-Age", "86400") // 24 hours
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
 
 	// Initialize routes
 	routes.SetupRoutes(router, minioClient, &logger, cfg)
