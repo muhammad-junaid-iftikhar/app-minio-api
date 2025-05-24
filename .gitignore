@@ -1,5 +1,9 @@
 #Binaries
-*.exe *.exe~ *.dll *.so *.dylib
+*.exe 
+*.exe~ 
+*.dll 
+*.so 
+*.dylib
 
 #Output of the go coverage tool
 *.out
@@ -8,11 +12,8 @@
 vendor/
 
 #Environment
-.env 
-.env.local 
-.env.development.local 
-.env.test.local 
-.env.production.local
+.env
+.env.example
 
 #IDEs and editors
 .idea/ *.sublime-project *.sublime-workspace .vscode/
