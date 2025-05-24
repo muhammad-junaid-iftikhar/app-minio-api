@@ -27,7 +27,7 @@ services:
       app-minio-drive:
         condition: service_healthy
     restart: unless-stopped
-    command: ["/app/wait-for-minio.sh"]
+    command: ["/app/server"]
     healthcheck:
       test:
         [
