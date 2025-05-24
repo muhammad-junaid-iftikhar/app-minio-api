@@ -8,15 +8,14 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/muhammad-junaid-iftikhar/app-minio-api/config"
-	"github.com/muhammad-junaid-iftikhar/app-minio-api/internal/api/routes"
-	"github.com/muhammad-junaid-iftikhar/app-minio-api/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/rs/zerolog"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	_ "github.com/muhammad-junaid-iftikhar/app-minio-api/docs" // Import generated docs
-	"github.com/gin-contrib/cors"
+	"github.com/muhammad-junaid-iftikhar/app-minio-api/config"
+	"github.com/muhammad-junaid-iftikhar/app-minio-api/internal/api/routes"
+	"github.com/muhammad-junaid-iftikhar/app-minio-api/internal/utils"
 )
 
 // @title           Minio Go API
