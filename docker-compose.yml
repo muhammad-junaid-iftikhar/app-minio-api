@@ -1,5 +1,5 @@
 services:
-  app:
+  app-minio-api:
     container_name: app-minio-api
     build:
       context: .
@@ -47,9 +47,9 @@ services:
       - app-network
       - microservices-network
 
-  vector:
+  app-minio-vector:
     image: timberio/vector:latest-alpine
-    container_name: vector
+    container_name: app-minio-vector
     command: ["-c", "/etc/vector/vector.toml"]
     environment:
       - VECTOR_LOG=error  # Only show errors in production

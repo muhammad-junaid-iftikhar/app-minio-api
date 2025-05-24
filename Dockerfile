@@ -37,12 +37,23 @@ CMD ["/go/bin/air"]
 # --- Production Stage: Minimal runtime image ---
 FROM alpine:latest AS prod
 
+WORKDIR /app
+
+# Install runtime dependencies
 RUN apk --no-cache add ca-certificates
 
-COPY --from=builder /bin/server /bin/server
+# Copy the binary from builder
+COPY --from=builder /bin/server /app/server
+
+# Copy config and docs
 COPY --from=builder /app/config /app/config
 COPY --from=builder /app/docs /app/docs
 
+# Make the binary executable
+RUN chmod +x /app/server
+
+# Expose the port the app runs on
 EXPOSE 8080
 
-ENTRYPOINT ["/bin/server"]
+# Command to run the application
+CMD ["/app/server"]

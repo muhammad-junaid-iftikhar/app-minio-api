@@ -61,6 +61,7 @@ func LoggerMiddleware(logger *zerolog.Logger) gin.HandlerFunc {
 			Time("timestamp", end).
 			Interface("resource", resource).
 			Interface("httpRequest", httpRequest).
+			Str("service", os.Getenv("APP_NAME")).
 			Msg(msg)
 	}
 }

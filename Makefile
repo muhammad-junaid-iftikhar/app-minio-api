@@ -9,17 +9,17 @@ dev: dev-down dev-build dev-up
 # Start development services
 dev-up:
 	@echo "Starting development environment..."
-	docker compose -f docker-compose.dev.yml up app app-minio-drive-dev vector-dev
+	docker compose -f docker-compose.dev.yml up app-minio-api app-minio-drive app-minio-vector
 
 # Stop development services
 dev-down:
 	@echo "Stopping development environment..."
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml down
+	docker compose -f docker-compose.dev.yml down
 
 # Rebuild development container
 dev-build:
 	@echo "Building development container..."
-	docker compose -f docker-compose.yml -f docker-compose.dev.yml build --no-cache app
+	docker compose -f docker-compose.dev.yml build --no-cache app-minio-api
 
 # --- PRODUCTION COMMANDS ---
 # Deploy production environment (with build)
@@ -31,8 +31,8 @@ prod-up:
 	docker compose -f docker-compose.yml up -d
 
 # Start production services with logs
-prod-up-logs:
-	@echo "Starting production environment..."
+prod-up-logs: prod-build
+	@echo "Starting production environment with logs..."
 	docker compose -f docker-compose.yml up
 
 # Stop production services
@@ -43,7 +43,7 @@ prod-down:
 # Rebuild production container
 prod-build:
 	@echo "Building production container..."
-	docker compose -f docker-compose.yml build --no-cache app
+	docker compose -f docker-compose.yml build --no-cache app-minio-api
 
 # --- BUILD & TEST COMMANDS ---
 # Build the application
