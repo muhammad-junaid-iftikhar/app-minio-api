@@ -12,7 +12,7 @@ services:
     environment:
       - SERVER_PORT=${SERVER_PORT}
       - MINIO_ENDPOINT=app-minio-drive
-      - MINIO_PORT=${MINIO_API_PORT}
+      - MINIO_PORT=9000
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
       - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD}
       - MINIO_USE_SSL=${MINIO_USE_SSL}
