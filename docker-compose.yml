@@ -49,6 +49,12 @@ services:
     networks:
       - app-network
       - microservices-network
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-minio-api.rule=Host(`minio-api.junistudio.org`)"
+      - "traefik.http.routers.app-minio-api.entrypoints=websecure"
+      - "traefik.http.routers.app-minio-api.tls.certresolver=myresolver"
+      - "traefik.http.services.app-minio-api.loadbalancer.server.port=${SERVER_PORT}"
 
   app-minio-drive:
     image: minio/minio:latest

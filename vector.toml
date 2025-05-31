@@ -19,7 +19,7 @@ if err == null {
 [sinks.openobserve]
 type = "http"
 inputs = ["only_api_json_logs"]
-uri = "http://openobserve:5080/api/default/default/_json"
+uri = "https://metrics.junistudio.org/api/default/default/_json"
 method = "post"
 encoding.codec = "json"
 encoding.timestamp_format = "rfc3339"
@@ -28,8 +28,8 @@ auth.strategy = "basic"
 auth.user = "admin@example.com"
 auth.password = "admin"
 
-healthcheck.enabled = true
-healthcheck.uri = "http://openobserve:5080/health"
+#healthcheck.enabled = true
+#healthcheck.uri = "http://openobserve:5080/health"
 
 # File sink as backup
 [sinks.file_backup]
