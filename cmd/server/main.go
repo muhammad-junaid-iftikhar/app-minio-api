@@ -87,16 +87,20 @@ func main() {
 			c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigins[0])
 		}
 
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type, X-Request-Id, X-Correlation-Id")
-		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
-		c.Writer.Header().Set("Access-Control-Max-Age", "86400") // 24 hours
-
+		// Handle preflight requests
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, X-Request-Id, X-Correlation-Id")
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Max-Age", "86400") // 24 hours
+			c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type, X-Request-Id, X-Correlation-Id")
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
+
+		// For actual requests
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type, X-Request-Id, X-Correlation-Id")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		c.Next()
 	})
