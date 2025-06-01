@@ -2,7 +2,7 @@
         dev dev-up dev-down dev-build \
         prod prod-up prod-down prod-build
 
-# --- DEVELOPMENT COMMANDS ---
+# --- DEVELOPMENT COMMANDS --- #
 # Start development environment (with hot reloading)
 dev: dev-down dev-build dev-up
 
