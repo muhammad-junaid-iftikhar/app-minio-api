@@ -62,18 +62,45 @@ func main() {
 	router.Use(utils.CorrelationIDMiddleware())
 	router.Use(utils.LoggerMiddleware(&logger))
 
-	// CORS middleware - permissive for development
+	// CORS middleware
 	router.Use(func(c *gin.Context) {
-		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
-		c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With")
-		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type")
-		c.Writer.Header().Set("Access-Control-Max-Age", "86400") // 24 hours
+		// List of allowed origins
+		allowedOrigins := []string{
+			"http://localhost:3000",
+			"https://drive-two.junistudio.org",
+		}
 
+		origin := c.Request.Header.Get("Origin")
+		allowed := false
+
+		// Check if the origin is in the allowed list
+		for _, o := range allowedOrigins {
+			if o == origin {
+				allowed = true
+				c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+				break
+			}
+		}
+
+		// If origin is not in the allowed list, use the first one as default
+		if !allowed && len(allowedOrigins) > 0 {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", allowedOrigins[0])
+		}
+
+		// Handle preflight requests
 		if c.Request.Method == "OPTIONS" {
-			c.AbortWithStatus(204)
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, X-Requested-With, X-Request-Id, X-Correlation-Id")
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Max-Age", "86400") // 24 hours
+			c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type, X-Request-Id, X-Correlation-Id")
+			c.AbortWithStatus(http.StatusNoContent)
 			return
 		}
+
+		// For actual requests
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type, X-Request-Id, X-Correlation-Id")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
 
 		c.Next()
 	})
