@@ -146,7 +146,7 @@ func (h *R2Handler) ListFiles(c *gin.Context) {
 		return
 	}
 
-	h.logger.Debug().
+	h.logger.Info().
 		Str("correlation_id", correlationIDStr).
 		Str("bucket", req.BucketName).
 		Int("object_count", len(result.Contents)).
@@ -175,7 +175,7 @@ func (h *R2Handler) ListFiles(c *gin.Context) {
 				Str("correlation_id", correlationIDStr).
 				Str("bucket", req.BucketName).
 				Str("key", key).
-				Msg("Failed to get object metadata, using empty content type")
+				Msg("Failed to get object metadata")
 		} else if headObj.ContentType != nil {
 			contentType = *headObj.ContentType
 			h.logger.Debug().
@@ -208,8 +208,7 @@ func (h *R2Handler) ListFiles(c *gin.Context) {
 		Str("correlation_id", correlationIDStr).
 		Str("bucket", req.BucketName).
 		Int("file_count", len(files)).
-		Interface("files", files).
-		Msg("Sending response")
+		Msg("Sending file list response")
 
 	// Set CORS headers
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
@@ -329,20 +328,12 @@ func (h *R2Handler) GeneratePresignedURL(c *gin.Context) {
 		Int64("expires_at", response.ExpiresAt).
 		Msg("Successfully generated presigned URL")
 
-	// Log the response that will be sent
+	// Log successful presigned URL generation
 	h.logger.Info().
 		Str("correlation_id", correlationIDStr).
-		Str("url", response.URL).
-		Str("method", response.Method).
-		Int64("expires_at", response.ExpiresAt).
-		Interface("headers", response.Headers).
+		Str("bucket", req.BucketName).
+		Str("object_key", req.ObjectKey).
 		Msg("Generated presigned URL")
-
-	// Log the response for debugging
-	h.logger.Debug().
-		Str("correlation_id", correlationIDStr).
-		Interface("response", response).
-		Msg("Sending response to client")
 
 	// Set CORS headers
 	c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
