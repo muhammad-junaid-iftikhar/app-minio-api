@@ -1,5 +1,33 @@
 basePath: /api/v1
-host: localhost:8080
+definitions:
+  internal_api_handlers.GeneratePresignedURLRequest:
+    properties:
+      bucket_name:
+        type: string
+      expires_in:
+        description: in seconds
+        type: integer
+      object_key:
+        type: string
+    required:
+    - bucket_name
+    - object_key
+    type: object
+  internal_api_handlers.PresignedURLResponse:
+    properties:
+      expires_at:
+        type: integer
+      headers:
+        additionalProperties:
+          type: string
+        description: Additional headers that should be included in the upload request
+        type: object
+      method:
+        type: string
+      url:
+        type: string
+    type: object
+host: localhost:8010
 info:
   contact:
     email: support@yourdomain.com
@@ -25,9 +53,66 @@ paths:
             items:
               type: object
             type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
       summary: List all buckets
       tags:
       - buckets
+  /cloudflare/r2/upload/presigned-url:
+    post:
+      consumes:
+      - application/json
+      description: Generate a presigned URL that can be used to upload a file directly
+        to R2
+      parameters:
+      - description: Presigned URL request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_handlers.GeneratePresignedURLRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api_handlers.PresignedURLResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Generate presigned URL for direct upload to R2
+      tags:
+      - cloudflare
   /files:
     get:
       description: List all files in the MinIO bucket
@@ -40,6 +125,20 @@ paths:
             items:
               type: object
             type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
       summary: List all files
       tags:
       - files
@@ -62,6 +161,26 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
       summary: Upload a file to MinIO
       tags:
       - files
@@ -83,6 +202,26 @@ paths:
             additionalProperties:
               type: string
             type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
       summary: Delete a file
       tags:
       - files
@@ -101,10 +240,43 @@ paths:
           description: OK
           schema:
             type: file
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
       summary: Get a file
       tags:
       - files
+schemes:
+- http
+- https
 securityDefinitions:
-  BasicAuth:
-    type: basic
+  BearerAuth:
+    description: Type 'Bearer' followed by a space and then your token (e.g., 'Bearer
+      your_token_here')
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

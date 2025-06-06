@@ -35,10 +35,14 @@ func NewMinioHandler(minioClient *minio.Client, logger *zerolog.Logger, cfg *con
 // @Summary Upload a file to MinIO
 // @Description Upload a file to MinIO storage
 // @Tags files
+// @Security BearerAuth
 // @Accept multipart/form-data
 // @Produce json
 // @Param file formData file true "File to upload"
 // @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /files [post]
 func (h *MinioHandler) UploadFile(c *gin.Context) {
 	correlationID, _ := c.Get("CorrelationID")
@@ -108,8 +112,11 @@ func (h *MinioHandler) UploadFile(c *gin.Context) {
 // @Summary List all files
 // @Description List all files in the MinIO bucket
 // @Tags files
+// @Security BearerAuth
 // @Produce json
 // @Success 200 {array} object
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /files [get]
 func (h *MinioHandler) ListFiles(c *gin.Context) {
 	correlationID, _ := c.Get("CorrelationID")
@@ -142,9 +149,14 @@ func (h *MinioHandler) ListFiles(c *gin.Context) {
 // @Summary Get a file
 // @Description Get a file from MinIO by its name
 // @Tags files
+// @Security BearerAuth
 // @Produce octet-stream
 // @Param filename path string true "File name"
 // @Success 200 {file} binary
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 404 {object} map[string]string "Not Found"
+// @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /files/{filename} [get]
 func (h *MinioHandler) GetFile(c *gin.Context) {
 	correlationID, _ := c.Get("CorrelationID")
@@ -181,6 +193,11 @@ func (h *MinioHandler) GetFile(c *gin.Context) {
 		return
 	}
 
+	// Set headers to prevent caching
+	c.Header("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
+	c.Header("Pragma", "no-cache")
+	c.Header("Expires", "0")
+	
 	// Set the content disposition header to force download with original filename
 	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
 	c.Header("Content-Type", stat.ContentType)
@@ -198,9 +215,13 @@ func (h *MinioHandler) GetFile(c *gin.Context) {
 // @Summary Delete a file
 // @Description Delete a file from MinIO by its name
 // @Tags files
+// @Security BearerAuth
 // @Produce json
 // @Param filename path string true "File name"
 // @Success 200 {object} map[string]string
+// @Failure 400 {object} map[string]string "Bad Request"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /files/{filename} [delete]
 func (h *MinioHandler) DeleteFile(c *gin.Context) {
 	correlationID, _ := c.Get("CorrelationID")
@@ -235,12 +256,17 @@ func (h *MinioHandler) DeleteFile(c *gin.Context) {
 // @Summary List all buckets
 // @Description List all buckets in MinIO
 // @Tags buckets
+// @Security BearerAuth
 // @Produce json
 // @Success 200 {array} object
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal Server Error"
 // @Router /buckets [get]
 func (h *MinioHandler) ListBuckets(c *gin.Context) {
 	correlationID, _ := c.Get("CorrelationID")
 	correlationIDStr, _ := correlationID.(string)
+	
+	// List all buckets
 	buckets, err := h.minioClient.ListBuckets(context.Background())
 	if err != nil {
 		h.logger.Error().Err(err).Str("correlation_id", correlationIDStr).Msg("Failed to list buckets")
@@ -248,13 +274,34 @@ func (h *MinioHandler) ListBuckets(c *gin.Context) {
 		return
 	}
 
+	h.logger.Info().
+		Str("correlation_id", correlationIDStr).
+		Int("bucket_count", len(buckets)).
+		Msg("Successfully listed buckets")
+
+	// If no buckets found, return empty array with 200 OK
+	if len(buckets) == 0 {
+		h.logger.Info().
+			Str("correlation_id", correlationIDStr).
+			Msg("No buckets found in MinIO")
+		utils.SendJSONWithCorrelationID(c, http.StatusOK, []interface{}{})
+		return
+	}
+
+	// Format the response
 	var result []map[string]interface{}
 	for _, bucket := range buckets {
-		result = append(result, map[string]interface{}{
+		bucketInfo := map[string]interface{}{
 			"name":         bucket.Name,
 			"creationDate": bucket.CreationDate.Format(time.RFC3339),
-		})
+		}
+		result = append(result, bucketInfo)
 	}
+
+	h.logger.Debug().
+		Str("correlation_id", correlationIDStr).
+		Interface("buckets", result).
+		Msg("Returning bucket list")
 
 	utils.SendJSONWithCorrelationID(c, http.StatusOK, result)
 }

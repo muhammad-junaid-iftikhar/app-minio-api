@@ -1,0 +1,31 @@
+# Application Configuration
+APP_ENV=development 
+SERVER_PORT=8010
+
+# Volume paths - Uncomment the appropriate section for your OS
+
+############## MAC OS ##############
+# MinIO
+USER_PROFILE=m.iftikhar
+volume_minio_path=/Users/${USER_PROFILE}/docker_volumes/minio/minio_data
+vector_volume_path=/Users/${USER_PROFILE}/docker_volumes/minio/vector
+
+############## LINUX ##############
+# Uncomment these lines for Linux and comment out the Mac section above
+# USER_PROFILE=juni
+# volume_minio_path=/home/${USER_PROFILE}/docker_volumes/minio/minio_data
+# vector_volume_path=/home/${USER_PROFILE}/docker_volumes/minio/vector
+
+# MinIO Configuration
+MINIO_ROOT_USER=adminuser
+MINIO_ROOT_PASSWORD=sdfs235vww2@235235
+MINIO_API_PORT=8011
+MINIO_CONSOLE_PORT=8012
+MINIO_USE_SSL=false
+MINIO_BUCKET_NAME=api-uploads
+MINIO_ENDPOINT=localhost
+
+# Logging
+PROJECT_ID=drive-juni-studio-prod
+APP_NAME=app-minio-api
+APP_SOURCE=prod

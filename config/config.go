@@ -15,13 +15,28 @@ import (
 )
 
 type Config struct {
-	ServerPort      string `mapstructure:"SERVER_PORT"`
+	// Server configuration
+	ServerPort string `mapstructure:"SERVER_PORT"`
+	AppEnv     string `mapstructure:"APP_ENV"`
+
+	// MinIO configuration
 	MinioEndpoint   string `mapstructure:"MINIO_ENDPOINT"`
 	MinioPort       string `mapstructure:"MINIO_PORT"`
 	MinioAccessKey  string `mapstructure:"MINIO_ACCESS_KEY"`
 	MinioSecretKey  string `mapstructure:"MINIO_SECRET_KEY"`
 	MinioUseSSL     bool   `mapstructure:"MINIO_USE_SSL"`
 	MinioBucketName string `mapstructure:"MINIO_BUCKET_NAME"`
+
+	// Cloudflare R2 configuration
+	R2AccountID       string `mapstructure:"R2_ACCOUNT_ID"`
+	R2AccessKeyID     string `mapstructure:"R2_ACCESS_KEY_ID"`
+	R2SecretAccessKey string `mapstructure:"R2_SECRET_ACCESS_KEY"`
+	R2PublicURL       string `mapstructure:"R2_PUBLIC_URL"`
+	R2Region          string `mapstructure:"R2_REGION"`
+
+	// Presigned URL configuration
+	PresignedURLExpiry int64 `mapstructure:"PRESIGNED_URL_EXPIRY"` // in seconds
+	MaxFileSize       int64 `mapstructure:"MAX_FILE_SIZE"`         // in bytes
 }
 
 // loadEnvFile loads environment variables from .env file if it exists
@@ -71,29 +86,46 @@ func LoadConfig() (*Config, error) {
 func setDefaults() {
 	// Server defaults
 	viper.SetDefault("SERVER_PORT", "8080")
+	viper.SetDefault("APP_ENV", "development")
 
 	// MinIO defaults
 	viper.SetDefault("MINIO_ENDPOINT", "localhost")
 	viper.SetDefault("MINIO_PORT", "9000")
 	viper.SetDefault("MINIO_USE_SSL", false)
-	viper.SetDefault("MINIO_BUCKET_NAME", "my-bucket")
+	viper.SetDefault("MINIO_BUCKET_NAME", "api-uploads")
+
+	// R2 defaults
+	viper.SetDefault("R2_REGION", "auto")
+	viper.SetDefault("PRESIGNED_URL_EXPIRY", 3600) // 1 hour in seconds
+	viper.SetDefault("MAX_FILE_SIZE", 104857600)        // 100MB in bytes
 }
 
 func bindEnvVars() {
-	// Server
+	// Server env vars
 	_ = viper.BindEnv("SERVER_PORT")
+	_ = viper.BindEnv("APP_ENV")
 
-	// MinIO
+	// MinIO env vars
 	_ = viper.BindEnv("MINIO_ENDPOINT")
 	_ = viper.BindEnv("MINIO_PORT")
 	_ = viper.BindEnv("MINIO_ACCESS_KEY")
 	_ = viper.BindEnv("MINIO_SECRET_KEY")
 	_ = viper.BindEnv("MINIO_USE_SSL")
 	_ = viper.BindEnv("MINIO_BUCKET_NAME")
+
+	// R2 env vars
+	_ = viper.BindEnv("R2_ACCOUNT_ID")
+	_ = viper.BindEnv("R2_ACCESS_KEY_ID")
+	_ = viper.BindEnv("R2_SECRET_ACCESS_KEY")
+	_ = viper.BindEnv("R2_PUBLIC_URL")
+	_ = viper.BindEnv("R2_REGION")
+
+	// Presigned URL env vars
+	_ = viper.BindEnv("PRESIGNED_URL_EXPIRY")
+	_ = viper.BindEnv("MAX_FILE_SIZE")
 }
 
-
-
+// InitMinioClient initializes a MinIO client
 func InitMinioClient(cfg *Config) (*minio.Client, error) {
 	// Initialize MinIO client
 	// Simply combine the endpoint and port as provided in the config

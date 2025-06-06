@@ -1,5 +1,5 @@
 # Stage 1: Build the Go binary
-FROM golang:1.23-alpine AS builder
+FROM golang:1.23.0-alpine3.19 AS builder
 
 WORKDIR /app
 
@@ -17,22 +17,45 @@ RUN /go/bin/swag init -g cmd/server/main.go -o ./docs
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/server ./cmd/server/main.go
 
 # --- Dev Stage: for local development with live reload ---
-FROM golang:1.23-alpine AS dev
+FROM golang:1.23.0-alpine3.19 AS dev
 
 WORKDIR /app
 
-# Install air for live reload
-RUN go install github.com/air-verse/air@latest
+# Install build tools and dependencies
+RUN apk add --no-cache git
 
+# Install air for live reload
+RUN go install github.com/cosmtrek/air@v1.49.0
+
+# Install swag globally
+RUN go install github.com/swaggo/swag/cmd/swag@v1.16.2
+
+# Ensure the PATH includes Go binaries
+ENV PATH="/go/bin:${PATH}"
+
+# Copy dependency files first for better caching
 COPY go.mod go.sum ./
 RUN go mod download
-RUN go install github.com/swaggo/swag/cmd/swag@v1.16.2
-ENV PATH="/go/bin:${PATH}"
+
+# Copy the rest of the application
 COPY . .
 
+# Verify swag is installed and working
+RUN swag --version
+
+# Generate initial Swagger docs
+RUN swag init -g ./cmd/server/main.go -o ./docs --parseDependency --parseInternal
+
+# Set environment variables for development
+ENV PATH="/go/bin:${PATH}" \
+    APP_ENV=development \
+    SERVER_PORT=8080
+
+# Expose the application port
 EXPOSE 8080
 
-CMD ["/go/bin/air"]
+# Command to run the application with live reload
+CMD ["air", "-c", ".air.toml"]
 
 # --- Production Stage: Minimal runtime image ---
 FROM alpine:latest AS prod

@@ -47,7 +47,7 @@ func LoggerMiddleware(logger *zerolog.Logger) gin.HandlerFunc {
 			"labels": map[string]interface{}{
 				"project_id": os.Getenv("PROJECT_ID"),
 				"app": os.Getenv("APP_NAME"),
-				"source": os.Getenv("APP_SOURCE"),
+				"env": os.Getenv("APP_ENV"),
 			},
 		}
 
