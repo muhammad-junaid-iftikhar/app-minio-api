@@ -95,7 +95,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_api_handlers.ListFilesRequest"
+                            "$ref": "#/definitions/handlers.ListFilesRequest"
                         }
                     }
                 ],
@@ -103,7 +103,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api_handlers.ListFilesResponse"
+                            "$ref": "#/definitions/handlers.ListFilesResponse"
                         }
                     },
                     "400": {
@@ -161,7 +161,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/internal_api_handlers.GeneratePresignedURLRequest"
+                            "$ref": "#/definitions/handlers.GeneratePresignedURLRequest"
                         }
                     }
                 ],
@@ -169,7 +169,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/internal_api_handlers.PresignedURLResponse"
+                            "$ref": "#/definitions/handlers.PresignedURLResponse"
                         }
                     },
                     "400": {
@@ -447,7 +447,7 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "internal_api_handlers.FileInfo": {
+        "handlers.FileInfo": {
             "type": "object",
             "properties": {
                 "content_type": {
@@ -464,7 +464,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api_handlers.GeneratePresignedURLRequest": {
+        "handlers.GeneratePresignedURLRequest": {
             "type": "object",
             "required": [
                 "bucket_name",
@@ -483,7 +483,7 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api_handlers.ListFilesRequest": {
+        "handlers.ListFilesRequest": {
             "type": "object",
             "required": [
                 "bucket_name"
@@ -494,18 +494,18 @@ const docTemplate = `{
                 }
             }
         },
-        "internal_api_handlers.ListFilesResponse": {
+        "handlers.ListFilesResponse": {
             "type": "object",
             "properties": {
                 "files": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/internal_api_handlers.FileInfo"
+                        "$ref": "#/definitions/handlers.FileInfo"
                     }
                 }
             }
         },
-        "internal_api_handlers.PresignedURLResponse": {
+        "handlers.PresignedURLResponse": {
             "type": "object",
             "properties": {
                 "expires_at": {

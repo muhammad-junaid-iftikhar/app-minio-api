@@ -1,6 +1,6 @@
 basePath: /api/v1
 definitions:
-  internal_api_handlers.FileInfo:
+  handlers.FileInfo:
     properties:
       content_type:
         type: string
@@ -11,7 +11,7 @@ definitions:
       size:
         type: integer
     type: object
-  internal_api_handlers.GeneratePresignedURLRequest:
+  handlers.GeneratePresignedURLRequest:
     properties:
       bucket_name:
         type: string
@@ -24,21 +24,21 @@ definitions:
     - bucket_name
     - object_key
     type: object
-  internal_api_handlers.ListFilesRequest:
+  handlers.ListFilesRequest:
     properties:
       bucket_name:
         type: string
     required:
     - bucket_name
     type: object
-  internal_api_handlers.ListFilesResponse:
+  handlers.ListFilesResponse:
     properties:
       files:
         items:
-          $ref: '#/definitions/internal_api_handlers.FileInfo'
+          $ref: '#/definitions/handlers.FileInfo'
         type: array
     type: object
-  internal_api_handlers.PresignedURLResponse:
+  handlers.PresignedURLResponse:
     properties:
       expires_at:
         type: integer
@@ -106,14 +106,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_api_handlers.ListFilesRequest'
+          $ref: '#/definitions/handlers.ListFilesRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_api_handlers.ListFilesResponse'
+            $ref: '#/definitions/handlers.ListFilesResponse'
         "400":
           description: Bad Request
           schema:
@@ -149,14 +149,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/internal_api_handlers.GeneratePresignedURLRequest'
+          $ref: '#/definitions/handlers.GeneratePresignedURLRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/internal_api_handlers.PresignedURLResponse'
+            $ref: '#/definitions/handlers.PresignedURLResponse'
         "400":
           description: Bad Request
           schema:

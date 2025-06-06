@@ -12,6 +12,12 @@ services:
     environment:
       - APP_ENV=production
       - SERVER_PORT=${SERVER_PORT}
+      - DB_HOST=app-minio-db
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_SSLMODE=${DB_SSLMODE}
       - MINIO_ENDPOINT=app-minio-drive
       - MINIO_PORT=9000
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
@@ -21,13 +27,17 @@ services:
       - PROJECT_ID=${PROJECT_ID}
       - APP_NAME=${APP_NAME}
       - APP_SOURCE=${APP_SOURCE}
+      - MIGRATIONS_PATH=/app/db/migrations
       - LOG_LEVEL=${LOG_LEVEL}
       - LOG_FORMAT=${LOG_FORMAT}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
     depends_on:
+      app-minio-db:
+        condition: service_healthy
       app-minio-drive:
         condition: service_healthy
     restart: unless-stopped
-    command: ["/app/server"]
+    command: ["/app/wait-for-db.sh", "/app/server"]
     healthcheck:
       test:
         [
@@ -55,6 +65,24 @@ services:
       - "traefik.http.routers.app-minio-api.entrypoints=websecure"
       - "traefik.http.routers.app-minio-api.tls.certresolver=myresolver"
       - "traefik.http.services.app-minio-api.loadbalancer.server.port=${SERVER_PORT}"
+
+  app-minio-db:
+    image: postgres:15-alpine
+    container_name: app-minio-db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - app-minio-db-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
 
   app-minio-drive:
     image: minio/minio:latest
@@ -91,6 +119,12 @@ services:
       - ./vector.toml:/etc/vector/vector.toml:ro
     networks:
       - microservices-network
+
+volumes:
+  app-minio-db-data:
+    driver: local
+  vector_data:
+    driver: local
 
 networks:
   app-network:

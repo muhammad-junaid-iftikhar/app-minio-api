@@ -9,7 +9,7 @@ dev: dev-down dev-build dev-up
 # Start development services
 dev-up:
 	@echo "Starting development environment..."
-	docker compose -f docker-compose.dev.yml up app-minio-api app-minio-drive app-minio-vector
+	docker compose -f docker-compose.dev.yml up app-minio-api app-minio-drive
 
 # Stop development services
 dev-down:

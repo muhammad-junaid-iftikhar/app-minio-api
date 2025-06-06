@@ -10,7 +10,14 @@ services:
     ports:
       - "${SERVER_PORT}:${SERVER_PORT}"
     environment:
+      - APP_ENV=development
       - SERVER_PORT=${SERVER_PORT}
+      - DB_HOST=app-minio-db
+      - DB_PORT=${DB_PORT}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - DB_SSLMODE=${DB_SSLMODE}
       - MINIO_ENDPOINT=app-minio-drive
       - MINIO_PORT=9000
       - MINIO_ACCESS_KEY=${MINIO_ROOT_USER}
@@ -20,24 +27,56 @@ services:
       - PROJECT_ID=${PROJECT_ID}
       - APP_NAME=${APP_NAME}
       - APP_SOURCE=${APP_SOURCE}
+      - MIGRATIONS_PATH=/app/db/migrations
+      - LOG_LEVEL=${LOG_LEVEL}
+      - LOG_FORMAT=${LOG_FORMAT}
+      - CORS_ALLOWED_ORIGINS=${CORS_ALLOWED_ORIGINS}
     depends_on:
+      app-minio-db:
+        condition: service_healthy
       app-minio-drive:
         condition: service_healthy
     restart: on-failure
     volumes:
       - .:/app
+      - /go/pkg/mod
       - air_tmp:/tmp
-    command: air
+      - ./db/migrations:/app/db/migrations
+    working_dir: /app
+    command: air -c .air.toml
+    entrypoint: ["/bin/sh", "/app/scripts/wait-for-db-dev.sh"]
+    tty: true
+    stdin_open: true
     networks:
       - app-network
       - microservices-network
+
+  app-minio-db:
+    image: postgres:15-alpine
+    container_name: app-minio-db
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    volumes:
+      - app-minio-db-data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    ports:
+      - "5540:${DB_PORT}" # for local dev access
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
 
   app-minio-drive:
     image: minio/minio:latest
     container_name: app-minio-drive
     ports:
-      - "${MINIO_API_PORT}:9000" # API port
-      - "${MINIO_CONSOLE_PORT}:9001" # Console port
+      - "${MINIO_API_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
     volumes:
       - ${volume_minio_path}:/data
     environment:
@@ -49,28 +88,12 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-      start_period: 10s
-    restart: unless-stopped
     networks:
       - app-network
-      - microservices-network
-
-  app-minio-vector:
-    image: timberio/vector:latest-alpine
-    container_name: app-minio-vector
-    command: ["-c", "/etc/vector/vector.toml"]
-    volumes:
-      - ${vector_volume_path}:/var/lib/vector
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - ./vector.toml:/etc/vector/vector.toml:ro
-    environment:
-      - VECTOR_LOG=info
-    networks:
-      - microservices-network
 
 volumes:
+  app-minio-db-data:
   air_tmp:
-    driver: local
 
 networks:
   app-network:

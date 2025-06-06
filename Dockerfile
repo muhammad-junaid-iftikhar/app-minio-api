@@ -30,6 +30,9 @@ RUN go install github.com/cosmtrek/air@v1.49.0
 # Install swag globally
 RUN go install github.com/swaggo/swag/cmd/swag@v1.16.2
 
+# Install golang-migrate for database migrations
+RUN go install -tags 'postgres' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
+
 # Ensure the PATH includes Go binaries
 ENV PATH="/go/bin:${PATH}"
 
