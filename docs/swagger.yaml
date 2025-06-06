@@ -1,5 +1,16 @@
 basePath: /api/v1
 definitions:
+  internal_api_handlers.FileInfo:
+    properties:
+      content_type:
+        type: string
+      key:
+        type: string
+      last_modified:
+        type: string
+      size:
+        type: integer
+    type: object
   internal_api_handlers.GeneratePresignedURLRequest:
     properties:
       bucket_name:
@@ -12,6 +23,20 @@ definitions:
     required:
     - bucket_name
     - object_key
+    type: object
+  internal_api_handlers.ListFilesRequest:
+    properties:
+      bucket_name:
+        type: string
+    required:
+    - bucket_name
+    type: object
+  internal_api_handlers.ListFilesResponse:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/internal_api_handlers.FileInfo'
+        type: array
     type: object
   internal_api_handlers.PresignedURLResponse:
     properties:
@@ -70,6 +95,48 @@ paths:
       summary: List all buckets
       tags:
       - buckets
+  /cloudflare/r2/files:
+    post:
+      consumes:
+      - application/json
+      description: List all files in the specified Cloudflare R2 bucket
+      parameters:
+      - description: Bucket name
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_api_handlers.ListFilesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/internal_api_handlers.ListFilesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List files in R2 bucket
+      tags:
+      - cloudflare
   /cloudflare/r2/upload/presigned-url:
     post:
       consumes:

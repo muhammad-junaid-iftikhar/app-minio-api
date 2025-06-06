@@ -68,6 +68,72 @@
                 }
             }
         },
+        "/cloudflare/r2/files": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "List all files in the specified Cloudflare R2 bucket",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "cloudflare"
+                ],
+                "summary": "List files in R2 bucket",
+                "parameters": [
+                    {
+                        "description": "Bucket name",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_handlers.ListFilesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/internal_api_handlers.ListFilesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/cloudflare/r2/upload/presigned-url": {
             "post": {
                 "security": [
@@ -379,6 +445,23 @@
         }
     },
     "definitions": {
+        "internal_api_handlers.FileInfo": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "last_modified": {
+                    "type": "string"
+                },
+                "size": {
+                    "type": "integer"
+                }
+            }
+        },
         "internal_api_handlers.GeneratePresignedURLRequest": {
             "type": "object",
             "required": [
@@ -395,6 +478,28 @@
                 },
                 "object_key": {
                     "type": "string"
+                }
+            }
+        },
+        "internal_api_handlers.ListFilesRequest": {
+            "type": "object",
+            "required": [
+                "bucket_name"
+            ],
+            "properties": {
+                "bucket_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "internal_api_handlers.ListFilesResponse": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/internal_api_handlers.FileInfo"
+                    }
                 }
             }
         },

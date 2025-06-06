@@ -157,6 +157,21 @@ func setupAppRoutes(router *gin.Engine, minioClient *minio.Client, logger *zerol
 			// R2 Storage operations (protected by auth)
 			r2 := cloudflare.Group("/r2")
 			{
+				// List files in R2 bucket
+				// @Summary List files in R2 bucket
+				// @Description List all files in the specified Cloudflare R2 bucket
+				// @Tags cloudflare,r2,files
+				// @Security BearerAuth
+				// @Accept json
+				// @Produce json
+				// @Param request body handlers.ListFilesRequest true "Bucket name"
+				// @Success 200 {object} handlers.ListFilesResponse
+				// @Failure 400 {object} map[string]string
+				// @Failure 401 {object} map[string]string
+				// @Failure 500 {object} map[string]string
+				// @Router /api/v1/cloudflare/r2/files [post]
+				r2.POST("/files", r2Handler.ListFiles)
+
 				// Upload operations
 				upload := r2.Group("/upload")
 				{

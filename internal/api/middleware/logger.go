@@ -19,14 +19,25 @@ type responseWriter struct {
 }
 
 func (w *responseWriter) Write(b []byte) (int, error) {
+	// Write to our buffer
 	size, err := w.body.Write(b)
 	w.size += size
+
+	// Also write to the original writer if status is not set yet or is successful
+	if w.status == 0 || (w.status >= 200 && w.status < 300) {
+		return w.ResponseWriter.Write(b)
+	}
 	return size, err
 }
 
 func (w *responseWriter) WriteHeader(statusCode int) {
+	// Store the status code
 	w.status = statusCode
-	w.ResponseWriter.WriteHeader(statusCode)
+
+	// Only write the header if it's a success status
+	if statusCode >= 200 && statusCode < 300 {
+		w.ResponseWriter.WriteHeader(statusCode)
+	}
 }
 
 func (w *responseWriter) Status() int {
@@ -35,6 +46,9 @@ func (w *responseWriter) Status() int {
 	}
 	return w.status
 }
+
+// Ensure the responseWriter implements http.ResponseWriter
+var _ http.ResponseWriter = &responseWriter{}
 
 // LoggerMiddleware creates a middleware that logs all incoming requests with detailed information
 func LoggerMiddleware(logger *zerolog.Logger) gin.HandlerFunc {
